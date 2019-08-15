@@ -87,7 +87,44 @@ class SubscriptionController {
       ...userOrg,
     });
 
-    return res.send(subscription);
+    return res.json(subscription);
+  }
+
+  async index(req, res) {
+    const subscriptions = await Subscription.findAll({
+      where: {
+        user_id: req.userId,
+      },
+    });
+
+    return res.json(subscriptions);
+  }
+
+  async show(req, res) {
+    const { id } = req.params;
+    const subscription = await Subscription.findByPk(id);
+
+    if (subscription.user_id !== req.userId) {
+      return res.status(401).json({ error: 'No permission' });
+    }
+
+    if (!subscription) {
+      return res.status(401).json({ error: 'Meetup not exists' });
+    }
+
+    return res.json(subscription);
+  }
+
+  async delete(req, res) {
+    const subscription = await Subscription.findByPk(req.params.id);
+
+    if (subscription.user_id !== req.userId) {
+      return res.status(401).json({ error: 'No permission' });
+    }
+
+    await subscription.destroy();
+
+    return res.json();
   }
 }
 

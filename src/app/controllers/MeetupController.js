@@ -51,13 +51,21 @@ class MeetupController {
   }
 
   async index(req, res) {
-    const meetups = await Meetup.findAll({
-      where: {
-        user_id: req.userId,
-      },
-    });
+    // todo - Logica para trazer paginado
+    const meetups = await Meetup.findAll();
 
     return res.json(meetups);
+  }
+
+  async show(req, res) {
+    const { id } = req.params;
+    const meetup = await Meetup.findByPk(id);
+
+    if (!meetup) {
+      return res.status(401).json({ error: 'Meetup not exists' });
+    }
+
+    return res.json(meetup);
   }
 
   async update(req, res) {
