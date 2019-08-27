@@ -1,7 +1,9 @@
 import * as Yup from 'yup';
-import { isBefore } from 'date-fns';
+import { isBefore, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { Op } from 'sequelize';
 
 import Meetup from '../models/Meetup';
+import User from '../models/User';
 import File from '../models/File';
 
 class MeetupController {
@@ -51,8 +53,23 @@ class MeetupController {
   }
 
   async index(req, res) {
-    // todo - Logica para trazer paginado
-    const meetups = await Meetup.findAll();
+    const where = {};
+    const page = req.query.page || 1;
+
+    if (req.query.date) {
+      const searchDate = parseISO(req.query.date);
+
+      where.date = {
+        [Op.between]: [startOfDay(searchDate), endOfDay(searchDate)],
+      };
+    }
+
+    const meetups = await Meetup.findAll({
+      where,
+      include: [User],
+      limit: 10,
+      offset: 10 * page - 10,
+    });
 
     return res.json(meetups);
   }
