@@ -2,6 +2,7 @@ import { isBefore } from 'date-fns';
 import Subscription from '../models/Subscription';
 import Meetup from '../models/Meetup';
 import User from '../models/User';
+import File from '../models/File';
 
 import SubscriptionMail from '../jobs/SubscriptionMail';
 import Queue from '../../lib/Queue';
@@ -81,10 +82,14 @@ class SubscriptionController {
 
     const userSub = await User.findByPk(user_id);
     const userOrg = await User.findByPk(checkMeetup.user_id);
+    console.log({
+      userSub,
+      userOrg,
+    });
 
     await Queue.add(SubscriptionMail.key, {
-      ...userSub,
-      ...userOrg,
+      userSub,
+      userOrg,
     });
 
     return res.json(subscription);
@@ -95,6 +100,15 @@ class SubscriptionController {
       where: {
         user_id: req.userId,
       },
+      include: [
+        {
+          model: Meetup,
+          include: [
+            User,
+            { model: File, as: 'file', attributes: ['id', 'path', 'url'] },
+          ],
+        },
+      ],
     });
 
     return res.json(subscriptions);
